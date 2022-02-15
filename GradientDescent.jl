@@ -16,13 +16,13 @@ push!(LOAD_PATH, "/Users/quintwiersma/Dropbox/VU/PhD/code/jllib/LineSearch")
 using LinearAlgebra, LineSearch
 
 export
-# BFGS
+    # BFGS
     bfgs!,
     lbfgs!
 
 # Structs
 # BFGS
-mutable struct BFGSState{Tv, Tm}
+mutable struct BFGSState{Tv, Tf, Tm}
     x::Tv       # current state
     x_prev::Tv  # previous state
     ∇f_prev::Tv # previous gradient of f(x)

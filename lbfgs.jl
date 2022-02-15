@@ -70,7 +70,7 @@ function twoloop!(state::LBFGSState, m::Integer, pseudo_iter::Integer)
 end
 
 """
-    update_state!(state, method, ls, f, ∇f!, args)
+    update_state!(state, method, ls, f, ∇f!)
 
 Update state using the limited-memory BFGS inverse Hessian approximation for the
 search direction with an inexact backtracking linesearch, storing the result in
@@ -82,19 +82,18 @@ search direction with an inexact backtracking linesearch, storing the result in
   - `ls::BackTrack`     : line search parameters
   - `f::Function`       : ``f(x)``
   - `∇f!::Function`     : gradient of `f`
-  - `args::NamedTuple`  : arguments for `f` and `∇f!`
 """
 function update_state!(state::LBFGSState, method::LBFGS, ls::BackTrack, 
-                        f::Function, ∇f!::Function, args::NamedTuple)
+                        f::Function, ∇f!::Function)
     # Current gradient
-    ∇f!(state.∇f_prev, state.x, args.∇f...)
+    ∇f!(state.∇f_prev, state.x)
 
     # Search direction
     twoloop!(state, method.m, method.pseudo_iter)
 
     # Backtracking line Search
     f_x= backtrack!(ls, state.x, state.x_prev, state.r, state.f_prev, 
-                    state.∇f_prev, f, args)
+                    state.∇f_prev, f)
     
     # Store current objective function value
     state.f_prev= f_x
@@ -103,7 +102,7 @@ function update_state!(state::LBFGSState, method::LBFGS, ls::BackTrack,
 end
 
 """
-    update_memory!(state, method, f, ∇f!, args)
+    update_memory!(state, method)
 
 Update memory of the limited-memory BFGS algorithm to construct the inverse
 Hessian approximation for the search direction.
@@ -111,9 +110,6 @@ Hessian approximation for the search direction.
 #### Arguments
   - `state::LBFGSState` : state variables
   - `method::LBFGS`     : method info
-  - `f::Function`       : ``f(x)``
-  - `∇f!::Function`     : gradient of `f`
-  - `args::NamedTuple`  : arguments for `f` and `∇f!`
 """
 function update_memory!(state::LBFGSState, method::LBFGS)
     # Inverse curvature condition
@@ -139,7 +135,7 @@ function update_memory!(state::LBFGSState, method::LBFGS)
 end
 
 """
-    lbfgs!(method, state, ls, f, ∇f!, args)
+    lbfgs!(method, state, ls, f, ∇f!)
 
 Update state and inverse Hessian approximation using the limited-memory BFGS
 algorithm.
@@ -150,18 +146,17 @@ algorithm.
   - `ls::BackTrack`     : line search parameters
   - `f::Function`       : ``f(x)``
   - `∇f!::Function`     : gradient of `f`
-  - `args::NamedTuple`  : arguments for `f` and `∇f!`
 """
 function lbfgs!(method::LBFGS, state::LBFGSState, ls::BackTrack, f::Function, 
-                ∇f!::Function, args::NamedTuple)
+                ∇f!::Function)
     # Update state
-    update_state!(state, method, ls, f, ∇f!, args)
+    update_state!(state, method, ls, f, ∇f!)
 
     # Change in state
     @. state.s= ls.α * state.r
 
     # Change in gradient
-    ∇f!(state.y, state.x, args.∇f...)
+    ∇f!(state.y, state.x)
     @. state.y= state.y - state.∇f_prev
 
     # Update memory

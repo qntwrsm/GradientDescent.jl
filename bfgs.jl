@@ -11,7 +11,7 @@ bfgs.jl
 =#
 
 """
-    update_state!(state, ls, f, ∇f!, args)
+    update_state!(state, ls, f, ∇f!)
 
 Update state using the BFGS inverse Hessian approximation for the search
 direction with an inexact backtracking linesearch, storing the result in `x`.
@@ -21,22 +21,20 @@ direction with an inexact backtracking linesearch, storing the result in `x`.
   - `ls::BackTrack`     : line search parameters
   - `f::Function`       : ``f(x)``
   - `∇f!::Function`     : gradient of `f`
-  - `args::NamedTuple`  : arguments for `f` and `∇f!`
 """
-function update_state!(state::BFGSState, ls::BackTrack, f::Function, ∇f!::Function,
-                        args::NamedTuple)
+function update_state!(state::BFGSState, ls::BackTrack, f::Function, ∇f!::Function)
     # Infer type
     T= eltype(state.p)
 
     # Current gradient
-    ∇f!(state.∇f_prev, state.x, args.∇f...)
+    ∇f!(state.∇f_prev, state.x)
 
     # Search direction
     mul!(state.p, state.Hi, state.∇f_prev, T(-1), zero(T))
 
     # Backtracking line Search
     f_x= backtrack!(ls, state.x, state.x_prev, state.p, state.f_prev, 
-                    state.∇f_prev, f, args)
+                    state.∇f_prev, f)
 
     # Store current objective function value
     state.f_prev= f_x
@@ -90,7 +88,7 @@ function update_h!(state::BFGSState)
 end
 
 """
-    bfgs!(state, ls, f, ∇f!, args)
+    bfgs!(state, ls, f, ∇f!)
 
 Update state and inverse Hessian approximation using the BFGS algorithm.
 
@@ -99,18 +97,16 @@ Update state and inverse Hessian approximation using the BFGS algorithm.
   - `ls::BackTrack`     : line search parameters
   - `f::Function`       : ``f(x)``
   - `∇f!::Function`     : gradient of `f`
-  - `args::NamedTuple`  : arguments for `f`, `∇f!`, and `backtracking!`
 """
-function bfgs!(state::BFGSState, ls::BackTrack, f::Function, ∇f!::Function, 
-                args::NamedTuple)
+function bfgs!(state::BFGSState, ls::BackTrack, f::Function, ∇f!::Function)
     # Update state
-    update_state!(state, ls, f, ∇f!, args)
+    update_state!(state, ls, f, ∇f!)
 
     # Change in state
     @. state.s= ls.α * state.p
 
     # Change in gradient
-    ∇f!(state.y, state.x, args.∇f...)
+    ∇f!(state.y, state.x)
     @. state.y= state.y - state.∇f_prev
 
     # Update inverse Hessian approx
