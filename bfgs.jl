@@ -10,6 +10,19 @@ bfgs.jl
 @date: 2022/01/24
 =#
 
+# BFGS state
+mutable struct BFGSState{Tv, Tf, Tm}
+    x::Tv       # current state
+    x_prev::Tv  # previous state
+    ∇f_prev::Tv # previous gradient of f(x)
+    f_prev::Tf  # previous f(x)
+    s::Tv       # change in state
+    y::Tv       # change in gradient
+    p::Tv       # search direction
+    Hi::Tm      # inverse Hessian approx
+    u::Tv       # buffer
+end
+
 """
     update_state!(state, ls, f, ∇f!)
 

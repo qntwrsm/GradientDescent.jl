@@ -10,6 +10,28 @@ lbfgs.jl
 @date: 2022/01/31
 =#
 
+# Method
+Base.@kwdef mutable struct LBFGS{T}
+    m::T = 10           # memory depth
+    pseudo_iter::T = 1  # pseudo iteration counter
+end
+# limited-memory BFGS state
+mutable struct LBFGSState{Tv, Tf, Tm}
+    x::Tv       # current state
+    x_prev::Tv  # previous state
+    ∇f_prev::Tv # previous gradient of f(x)
+    f_prev::Tf  # previous f(x)
+    s::Tv       # change in state
+    y::Tv       # change in gradient
+    s_mem::Tm   # memory change in states
+    y_mem::Tm   # memory change in gradients
+    r::Tv       # search direction
+    ρ::Tv       # two-loop ρ
+    α::Tv       # buffer two-loop α
+    q::Tv       # buffer two-loop q
+    u::Tv       # buffer
+end
+
 """
     twoloop!(state, m, pseudo_iter)
 
