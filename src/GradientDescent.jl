@@ -11,8 +11,6 @@ GradientDescent.jl
 
 module GradientDescent
 
-push!(LOAD_PATH, "/Users/quintwiersma/Dropbox/VU/PhD/code/jllib/LineSearch")
-
 using LinearAlgebra, LineSearch
 
 export

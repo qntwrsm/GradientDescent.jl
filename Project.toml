@@ -1,0 +1,13 @@
+name = "GradientDescent"
+uuid = "0ec96d6c-abc2-43e2-adac-26468a6b9764"
+authors = ["Quint Wiersma <qnt.wrsm@gmail.com> and contributors"]
+version = "0.1.0"
+
+[compat]
+julia = "1.7"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
