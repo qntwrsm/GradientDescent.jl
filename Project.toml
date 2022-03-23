@@ -3,6 +3,10 @@ uuid = "0ec96d6c-abc2-43e2-adac-26468a6b9764"
 authors = ["Quint Wiersma <qnt.wrsm@gmail.com> and contributors"]
 version = "0.1.0"
 
+[deps]
+LineSearch = "1664ce10-da2b-4841-9b23-8adf27832785"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+
 [compat]
 julia = "1.7"
 
