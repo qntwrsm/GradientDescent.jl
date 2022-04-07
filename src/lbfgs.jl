@@ -135,7 +135,7 @@ Hessian approximation for the search direction.
 """
 function update_memory!(state::LBFGSState, method::LBFGS)
     # Inverse curvature condition
-    ρ= inv(dot(state,y, state.s))
+    ρ= inv(dot(state.y, state.s))
 
     if isinf(ρ)
         # Erase memory, restart

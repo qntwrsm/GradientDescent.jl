@@ -14,6 +14,9 @@ module GradientDescent
 using LinearAlgebra, LineSearch
 
 export
+    # Structs
+    BFGSState,
+    LBFGS, LBFGSState, 
     # BFGS
     bfgs!,
     lbfgs!
