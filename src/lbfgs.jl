@@ -29,7 +29,6 @@ mutable struct LBFGSState{Tv, Tf, Tm}
     ρ::Tv       # two-loop ρ
     α::Tv       # buffer two-loop α
     q::Tv       # buffer two-loop q
-    u::Tv       # buffer
 end
 
 """
@@ -59,7 +58,7 @@ function twoloop!(state::LBFGSState, m::Integer, pseudo_iter::Integer)
         y_i= view(state.y_mem, :, idx)
 
         state.α[idx]= state.ρ[idx] * dot(s_i, state.q)
-        @. state.q-= state.α[idx] * y_i
+        state.q.-= state.α[idx] .* y_i
     end
 
     # Initialize search direction r
@@ -71,9 +70,9 @@ function twoloop!(state::LBFGSState, m::Integer, pseudo_iter::Integer)
         y_i= view(state.y_mem, :, idx)
 
         γ= dot(s_i, y_i) * inv(sum(abs2, y_i))
-        @. state.r= γ * state.q
+        state.r.= γ .* state.q
     else
-        copyto!(state.r, state.q)
+        state.r.= state.q
     end
 
     # Forward pass to update search direction r
@@ -85,14 +84,17 @@ function twoloop!(state::LBFGSState, m::Integer, pseudo_iter::Integer)
         y_i= view(state.y_mem, :, idx)
 
         β= state.ρ[idx] * dot(y_i, state.r)
-        @. state.r+= s_i * (state.α[idx] - β)
+        state.r.+= s_i .* (state.α[idx] - β)
     end
+
+    # Negate search direction
+    rmul!(state.r, eltype(state.r)(-1))
 
     return nothing
 end
 
 """
-    update_state!(state, method, ls, f, ∇f!)
+    update_state!(state, method, ls, f)
 
 Update state using the limited-memory BFGS inverse Hessian approximation for the
 search direction with an inexact backtracking linesearch, storing the result in
@@ -103,22 +105,18 @@ search direction with an inexact backtracking linesearch, storing the result in
   - `ls::BackTrack`     : line search parameters
   - `ls::BackTrack`     : line search parameters
   - `f::Function`       : ``f(x)``
-  - `∇f!::Function`     : gradient of `f`
 """
 function update_state!(state::LBFGSState, method::LBFGS, ls::BackTrack, 
-                        f::Function, ∇f!::Function)
-    # Current gradient
-    ∇f!(state.∇f_prev, state.x)
+                        f::Function)
+    # Store current state
+    state.x_prev.= state.x
 
     # Search direction
     twoloop!(state, method.m, method.pseudo_iter)
 
     # Backtracking line Search
-    f_x= backtrack!(ls, state.x, state.x_prev, state.r, state.f_prev, 
-                    state.∇f_prev, f)
-    
-    # Store current objective function value
-    state.f_prev= f_x
+    state.f_prev= backtrack!(ls, state.x, state.x_prev, state.r, state.f_prev, 
+                            state.∇f_prev, f)
 
     return nothing
 end
@@ -172,14 +170,17 @@ algorithm.
 function lbfgs!(method::LBFGS, state::LBFGSState, ls::BackTrack, f::Function, 
                 ∇f!::Function)
     # Update state
-    update_state!(state, method, ls, f, ∇f!)
+    update_state!(state, method, ls, f)
 
     # Change in state
-    @. state.s= ls.α * state.r
+    state.s.= ls.α .* state.r
 
+    # Store previous gradient
+    state.y.= state.∇f_prev
+    # Update gradient
+    ∇f!(state.∇f_prev, state.x)
     # Change in gradient
-    ∇f!(state.y, state.x)
-    @. state.y= state.y - state.∇f_prev
+    state.y.= state.∇f_prev .- state.y
 
     # Update memory
     update_memory!(state, method)
