@@ -12,8 +12,8 @@ lbfgs.jl
 
 # Method
 Base.@kwdef mutable struct LBFGS{T}
-    m::T = 10           # memory depth
-    pseudo_iter::T = 1  # pseudo iteration counter
+    m::T=10             # memory depth
+    pseudo_iter::T=1    # pseudo iteration counter
 end
 # limited-memory BFGS state
 mutable struct LBFGSState{Tv, Tf, Tm}
@@ -50,7 +50,7 @@ function twoloop!(state::LBFGSState, m::Integer, pseudo_iter::Integer)
     copyto!(state.q, state.∇f_prev)
 
     # Backward pass to update q
-    @inbounds for i in upper:-1:lower
+    @inbounds for i = upper:-1:lower
         idx= mod1(i,m)  # convert index to [1,m] range
 
         # Store views
@@ -76,7 +76,7 @@ function twoloop!(state::LBFGSState, m::Integer, pseudo_iter::Integer)
     end
 
     # Forward pass to update search direction r
-    @inbounds for i in lower:upper
+    @inbounds for i = lower:upper
         idx= mod1(i,m)  # convert index to [1,m] range
 
         # Store views
@@ -106,8 +106,12 @@ search direction with an inexact backtracking linesearch, storing the result in
   - `ls::BackTrack`     : line search parameters
   - `f::Function`       : ``f(x)``
 """
-function update_state!(state::LBFGSState, method::LBFGS, ls::BackTrack, 
-                        f::Function)
+function update_state!(
+    state::LBFGSState, 
+    method::LBFGS, 
+    ls::BackTrack, 
+    f::Function
+)
     # Store current state
     state.x_prev.= state.x
 
@@ -115,8 +119,15 @@ function update_state!(state::LBFGSState, method::LBFGS, ls::BackTrack,
     twoloop!(state, method.m, method.pseudo_iter)
 
     # Backtracking line Search
-    state.f_prev= backtrack!(ls, state.x, state.x_prev, state.r, state.f_prev, 
-                            state.∇f_prev, f)
+    state.f_prev= backtrack!(
+        ls, 
+        state.x, 
+        state.x_prev, 
+        state.r, 
+        state.f_prev, 
+        state.∇f_prev, 
+        f
+    )
 
     return nothing
 end
@@ -167,8 +178,13 @@ algorithm.
   - `f::Function`       : ``f(x)``
   - `∇f!::Function`     : gradient of `f`
 """
-function lbfgs!(method::LBFGS, state::LBFGSState, ls::BackTrack, f::Function, 
-                ∇f!::Function)
+function lbfgs!(
+    method::LBFGS, 
+    state::LBFGSState, 
+    ls::BackTrack, 
+    f::Function,            
+    ∇f!::Function
+)
     # Update state
     update_state!(state, method, ls, f)
 

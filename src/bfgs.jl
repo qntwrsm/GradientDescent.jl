@@ -46,8 +46,15 @@ function update_state!(state::BFGSState, ls::BackTrack, f::Function, ∇f!::Func
     mul!(state.p, state.Hi, state.∇f_prev, T(-1), zero(T))
 
     # Backtracking line Search
-    f_x= backtrack!(ls, state.x, state.x_prev, state.p, state.f_prev, 
-                    state.∇f_prev, f)
+    f_x= backtrack!(
+        ls, 
+        state.x, 
+        state.x_prev, 
+        state.p, 
+        state.f_prev,            
+        state.∇f_prev, 
+        f
+    )
 
     # Store current objective function value
     state.f_prev= f_x
@@ -80,10 +87,10 @@ function update_h!(state::BFGSState)
         n= length(state.x)
         # Small dimensions: loop unfolding
         if n < 50
-            for i in 1:n
+            for i = 1:n
                 s_i= state.s[i]
                 u_i= state.u[i]
-                @simd for j in 1:n
+                @simd for j = 1:n
                     @inbounds state.Hi[i,j]+= α * s_i * state.s[j] - 
                                                 β * (u_i * state.s[j] +
                                                         state.u[j] * s_i)
@@ -116,11 +123,11 @@ function bfgs!(state::BFGSState, ls::BackTrack, f::Function, ∇f!::Function)
     update_state!(state, ls, f, ∇f!)
 
     # Change in state
-    @. state.s= ls.α * state.p
+    state.s.= ls.α .* state.p
 
     # Change in gradient
     ∇f!(state.y, state.x)
-    @. state.y= state.y - state.∇f_prev
+    state.y.= state.y .- state.∇f_prev
 
     # Update inverse Hessian approx
     update_h!(state)
